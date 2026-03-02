@@ -57,13 +57,14 @@ export default function Choferes() {
             const newUserId = authData.user.id;
 
             // 3. (Opcional pero recomendado) Intenta agregarlo a la tabla pública 'usuarios'
-            await supabase.from('usuarios').insert([{
+            const { error: insertUserError } = await supabase.from('usuarios').insert([{
                 id: newUserId,
                 empresa_id: userData.empresa_id,
                 nombre: nombre,
                 email: emailFalso,
                 rol: 'transportista'
-            }]).catch(() => { }); // Si falla por política RLS, lo evadimos ya que la Auth está hecha
+            }]);
+            if (insertUserError) console.log('Aviso: No se pudo insertar en public.usuarios (probable RLS), ignorando...');
 
             // 4. Agregar a la flota física de "Choferes"
             const { data, error } = await supabase.from('choferes').insert([{
