@@ -17,12 +17,11 @@ export default function NuevoRemito() {
         destinatario_direccion: '',
         destinatario_localidad: '',
         observaciones: '',
-        // Totales (normalmente sumarizados desde bultos, pero acá permitimos entrada directa/calculada)
+        // Totales calculados automáticamente desde las filas más recargos extra
         valor_declarado_total: 0,
         flete_total: 0,
         seguro_total: 0,
         otros_cargos: 0,
-        subtotal: 0,
         tipo_flete: 'pago_destino', // pago_destino, pago_origen, cta_cte
         contra_reembolso: 0
     });
@@ -32,14 +31,22 @@ export default function NuevoRemito() {
         cantidad: 1,
         detalle: 'Caja',
         peso_kg: 0,
-        bul: 1
+        bul: 1,
+        flete: 0,
+        valor_declarado: 0
     }]);
 
     useEffect(() => {
-        // Auto-cálculo simple (Opcional, puede hacerse a mano)
-        const subtotal = Number(remito.valor_declarado_total) + Number(remito.flete_total) + Number(remito.seguro_total) + Number(remito.otros_cargos);
-        setRemito(prev => ({ ...prev, subtotal }));
-    }, [remito.valor_declarado_total, remito.flete_total, remito.seguro_total, remito.otros_cargos]);
+        // Auto-cálculo simple (Totales de Flete y Valor de todos los bultos)
+        const totalFleteItems = bultos.reduce((acc, b) => acc + (Number(b.flete) || 0), 0);
+        const totalValItems = bultos.reduce((acc, b) => acc + (Number(b.valor_declarado) || 0), 0);
+
+        setRemito(prev => ({
+            ...prev,
+            flete_total: totalFleteItems,
+            valor_declarado_total: totalValItems
+        }));
+    }, [bultos]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -53,7 +60,7 @@ export default function NuevoRemito() {
     };
 
     const addBultoRow = () => {
-        setBultos([...bultos, { cantidad: 1, detalle: '', peso_kg: 0, bul: 1 }]);
+        setBultos([...bultos, { cantidad: 1, detalle: '', peso_kg: 0, bul: 1, flete: 0, valor_declarado: 0 }]);
     };
 
     const removeBultoRow = (index) => {
@@ -84,9 +91,9 @@ export default function NuevoRemito() {
                 flete_total: remito.flete_total,
                 seguro_total: remito.seguro_total,
                 otros_cargos: remito.otros_cargos,
-                subtotal: remito.subtotal,
                 tipo_flete: remito.tipo_flete,
                 contra_reembolso: remito.contra_reembolso,
+                numero_guia: 'HYD-' + Date.now().toString().slice(-6), // Auto Guía Simple Test
                 estado: 'pendiente'
             }]).select().single();
 
@@ -98,7 +105,9 @@ export default function NuevoRemito() {
                 cantidad: b.cantidad,
                 detalle: b.detalle,
                 peso_kg: b.peso_kg,
-                bul: b.bul
+                bul: b.bul,
+                flete: b.flete,
+                valor_declarado: b.valor_declarado
             }));
 
             const { error: bultosError } = await supabase.from('remitos_items').insert(bultosToInsert);
@@ -161,7 +170,9 @@ export default function NuevoRemito() {
                             <div key={idx} className="flex gap-2 items-center" style={{ background: 'var(--surface)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }}>
                                 <input type="number" min="1" className="form-input w-16 px-1 text-center" placeholder="Cant" value={b.cantidad} onChange={(e) => updateBulto(idx, 'cantidad', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} required />
                                 <input type="text" className="form-input flex-1 px-2" placeholder="Detalle (Ej. Cajas M)" value={b.detalle} onChange={(e) => updateBulto(idx, 'detalle', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} required />
-                                <input type="number" className="form-input w-20 px-1 text-center" placeholder="Bultos" value={b.bul} onChange={(e) => updateBulto(idx, 'bul', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} required />
+                                <input type="number" className="form-input w-16 px-1 text-center" placeholder="Bultos" value={b.bul} onChange={(e) => updateBulto(idx, 'bul', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} required />
+                                <input type="number" className="form-input w-24 px-1 text-right text-primary" placeholder="$ Flete" value={b.flete} onChange={(e) => updateBulto(idx, 'flete', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} />
+                                <input type="number" className="form-input w-24 px-1 text-right text-muted" placeholder="$ V.Dec" value={b.valor_declarado} onChange={(e) => updateBulto(idx, 'valor_declarado', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} />
 
                                 {bultos.length > 1 && (
                                     <button type="button" onClick={() => removeBultoRow(idx)} className="text-muted p-1 hover:text-red-400">
@@ -206,8 +217,10 @@ export default function NuevoRemito() {
 
                     <div className="flex gap-3 mb-4 p-3 rounded" style={{ background: 'var(--surface-hover)', border: '1px solid var(--primary)', alignOptions: 'center' }}>
                         <div className="flex-1">
-                            <label className="text-[var(--primary)] text-xs font-bold mb-1 block uppercase">Total Fletes / Gastos</label>
-                            <div className="text-xl font-bold">$ {Number(remito.subtotal).toLocaleString('es-AR')}</div>
+                            <label className="text-[var(--primary)] text-xs font-bold mb-1 block uppercase">Suma Estimada Gastos</label>
+                            <div className="text-xl font-bold text-[var(--primary)] text-opacity-80">
+                                $ {(Number(remito.flete_total) + Number(remito.seguro_total) + Number(remito.otros_cargos)).toLocaleString('es-AR')}
+                            </div>
                         </div>
                         <div className="flex-1">
                             <label className="text-muted text-xs mb-1 block uppercase">Contra Reembolso</label>
