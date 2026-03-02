@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Bird, LogIn, Search, Loader2 } from 'lucide-react';
+import { LogIn, Search, Loader2 } from 'lucide-react';
+import { Logo } from '../components/Logo';
 import { supabase } from '../lib/supabase';
 
 export default function Login() {
@@ -36,8 +37,8 @@ export default function Login() {
     return (
         <div className="flex flex-col items-center justify-center h-full" style={{ padding: '1rem' }}>
             <div className="text-center mb-8 mt-4">
-                <div className="flex justify-center mb-6 text-[var(--primary)]" style={{ transform: 'scale(1.2)' }}>
-                    <Bird size={64} strokeWidth={1.2} />
+                <div className="flex justify-center mb-6" style={{ transform: 'scale(1.2)' }}>
+                    <Logo style={{ width: 80, height: 80, color: 'var(--primary)' }} />
                 </div>
                 <h1 className="mb-2" style={{ letterSpacing: '-0.03em', fontSize: '2.25rem', textTransform: 'uppercase' }}>
                     Transporte <span style={{ color: 'var(--primary)' }}>Hidalgo</span>

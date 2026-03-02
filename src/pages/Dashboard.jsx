@@ -37,10 +37,10 @@ export default function Dashboard() {
             </div>
 
             <div className="mb-8">
-                <button className="btn btn-primary w-full" style={{ padding: '1.25rem', justifyContent: 'center' }}>
+                <Link to="/remitos/nuevo" className="btn btn-primary w-full" style={{ padding: '1.25rem', justifyContent: 'center', textDecoration: 'none' }}>
                     <PackagePlus size={20} style={{ marginRight: '0.75rem' }} />
                     Cargar Nuevo Remito
-                </button>
+                </Link>
             </div>
 
             <h3 className="mb-4" style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Operativa</h3>

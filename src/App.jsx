@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Vehiculos from './pages/Vehiculos';
 import Choferes from './pages/Choferes';
+import NuevoRemito from './pages/remitos/NuevoRemito';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -57,6 +58,10 @@ function App() {
           <Route
             path="/choferes"
             element={session ? <Choferes /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/remitos/nuevo"
+            element={session ? <NuevoRemito /> : <Navigate to="/" replace />}
           />
           {/* Agregaremos más rutas protegidas aquí luego */}
         </Routes>
