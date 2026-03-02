@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { PackagePlus, ArrowLeft, Save, Plus } from 'lucide-react';
+import { PackagePlus, ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function NuevoRemito() {
