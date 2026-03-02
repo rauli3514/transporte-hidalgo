@@ -1,16 +1,36 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Bird, LogIn, Search } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Bird, LogIn, Search, Loader2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export default function Login() {
-    const navigate = useNavigate();
-    const [email, setEmail] = useState('');
+    const [identifier, setIdentifier] = useState(''); // Puede ser usuario o email
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        // Start login flow
-        navigate('/dashboard');
+        setLoading(true);
+        setErrorMsg('');
+
+        // Si el usuario ingresa solo "juan", asumimos que su email es "juan@hidalgo.com.ar"
+        // Esto permite loguearse rápido con un "Usuario" corto sin pedirle correo electrónico real.
+        const emailToUse = identifier.includes('@') ? identifier : `${identifier}@hidalgo.com.ar`;
+
+        const { error } = await supabase.auth.signInWithPassword({
+            email: emailToUse,
+            password,
+        });
+
+        if (error) {
+            if (error.message.includes('Invalid login')) {
+                setErrorMsg('Usuario o contraseña incorrectos.');
+            } else {
+                setErrorMsg(error.message);
+            }
+        }
+
+        setLoading(false);
     };
 
     return (
@@ -29,22 +49,29 @@ export default function Login() {
 
             <div className="w-full">
                 <div className="card w-full" style={{ padding: '2rem 1.5rem', marginBottom: '2rem' }}>
+                    {errorMsg && (
+                        <div className="mb-4" style={{ padding: '0.75rem', backgroundColor: 'var(--status-observed-bg)', color: 'var(--status-observed)', borderRadius: '0.5rem', fontSize: '0.875rem', textAlign: 'center' }}>
+                            {errorMsg}
+                        </div>
+                    )}
+
                     <form onSubmit={handleLogin}>
                         <div className="form-group">
-                            <label className="form-label" htmlFor="email">Usuario o Email</label>
+                            <label className="form-label" htmlFor="identifier">Identificador (Usuario)</label>
                             <input
-                                id="email"
-                                type="email"
+                                id="identifier"
+                                type="text"
                                 className="form-input"
-                                placeholder="operador@hidalgo.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="Ejemplo: admin o operador1"
+                                value={identifier}
+                                onChange={(e) => setIdentifier(e.target.value)}
+                                autoCapitalize="none"
                                 required
                             />
                         </div>
 
                         <div className="form-group mb-8">
-                            <label className="form-label" htmlFor="password">Contraseña</label>
+                            <label className="form-label" htmlFor="password">Contraseña (PIN)</label>
                             <input
                                 id="password"
                                 type="password"
@@ -56,9 +83,18 @@ export default function Login() {
                             />
                         </div>
 
-                        <button type="submit" className="btn btn-primary w-full">
-                            Ingresar al Sistema
-                            <LogIn size={20} style={{ marginLeft: '0.5rem' }} />
+                        <button type="submit" className="btn btn-primary w-full" disabled={loading}>
+                            {loading ? (
+                                <>
+                                    <Loader2 size={20} className="animate-spin" style={{ marginRight: '0.5rem', animation: 'spin 1s linear infinite' }} />
+                                    Verificando...
+                                </>
+                            ) : (
+                                <>
+                                    Ingresar al Sistema
+                                    <LogIn size={20} style={{ marginLeft: '0.5rem' }} />
+                                </>
+                            )}
                         </button>
                     </form>
                 </div>
@@ -73,6 +109,14 @@ export default function Login() {
                     </button>
                 </div>
             </div>
+
+            {/* Añadimos estilos keyframes para el spin loader */}
+            <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
         </div>
     );
 }
