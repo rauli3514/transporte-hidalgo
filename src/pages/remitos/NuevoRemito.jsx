@@ -167,16 +167,31 @@ export default function NuevoRemito() {
 
                     <div className="flex flex-col gap-3 mb-4">
                         {bultos.map((b, idx) => (
-                            <div key={idx} className="flex gap-2 items-center" style={{ background: 'var(--surface)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }}>
-                                <input type="number" min="1" className="form-input w-16 px-1 text-center" placeholder="Cant" value={b.cantidad} onChange={(e) => updateBulto(idx, 'cantidad', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} required />
-                                <input type="text" className="form-input flex-1 px-2" placeholder="Detalle (Ej. Cajas M)" value={b.detalle} onChange={(e) => updateBulto(idx, 'detalle', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} required />
-                                <input type="number" className="form-input w-16 px-1 text-center" placeholder="Bultos" value={b.bul} onChange={(e) => updateBulto(idx, 'bul', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} required />
-                                <input type="number" className="form-input w-24 px-1 text-right text-primary" placeholder="$ Flete" value={b.flete} onChange={(e) => updateBulto(idx, 'flete', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} />
-                                <input type="number" className="form-input w-24 px-1 text-right text-muted" placeholder="$ V.Dec" value={b.valor_declarado} onChange={(e) => updateBulto(idx, 'valor_declarado', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} />
+                            <div key={idx} className="flex flex-wrap md:flex-nowrap gap-2 items-end" style={{ background: 'var(--surface)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }}>
+                                <div className="flex flex-col flex-1 min-w-[60px]">
+                                    <label className="text-[10px] text-muted font-bold uppercase mb-1">Cant</label>
+                                    <input type="number" min="1" className="form-input px-1 text-center" placeholder="1" value={b.cantidad} onChange={(e) => updateBulto(idx, 'cantidad', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} required />
+                                </div>
+                                <div className="flex flex-col flex-[3] min-w-[120px]">
+                                    <label className="text-[10px] text-muted font-bold uppercase mb-1">Detalle</label>
+                                    <input type="text" className="form-input px-2" placeholder="Ej. Cajas M" value={b.detalle} onChange={(e) => updateBulto(idx, 'detalle', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} required />
+                                </div>
+                                <div className="flex flex-col flex-1 min-w-[60px]">
+                                    <label className="text-[10px] text-muted font-bold uppercase mb-1">Bultos</label>
+                                    <input type="number" className="form-input px-1 text-center" placeholder="1" value={b.bul} onChange={(e) => updateBulto(idx, 'bul', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} required />
+                                </div>
+                                <div className="flex flex-col flex-1 min-w-[80px]">
+                                    <label className="text-[10px] text-[var(--primary)] font-bold uppercase mb-1">$ Flete</label>
+                                    <input type="number" className="form-input px-1 text-right text-primary font-bold" placeholder="0" value={b.flete || ''} onChange={(e) => updateBulto(idx, 'flete', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} />
+                                </div>
+                                <div className="flex flex-col flex-1 min-w-[80px]">
+                                    <label className="text-[10px] text-muted font-bold uppercase mb-1">$ Val.Dec</label>
+                                    <input type="number" className="form-input px-1 text-right text-muted font-bold" placeholder="0" value={b.valor_declarado || ''} onChange={(e) => updateBulto(idx, 'valor_declarado', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} />
+                                </div>
 
                                 {bultos.length > 1 && (
-                                    <button type="button" onClick={() => removeBultoRow(idx)} className="text-muted p-1 hover:text-red-400">
-                                        <Trash2 size={18} />
+                                    <button type="button" onClick={() => removeBultoRow(idx)} className="text-muted p-1 hover:text-red-400 mb-1" style={{ paddingBottom: '0.35rem' }}>
+                                        <Trash2 size={24} />
                                     </button>
                                 )}
                             </div>
