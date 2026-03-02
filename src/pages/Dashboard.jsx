@@ -36,10 +36,13 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            <div className="mb-8">
+            <div className="mb-8 grid gap-3 grid-cols-2">
                 <Link to="/remitos/nuevo" className="btn btn-primary w-full" style={{ padding: '1.25rem', justifyContent: 'center', textDecoration: 'none' }}>
                     <PackagePlus size={20} style={{ marginRight: '0.75rem' }} />
-                    Cargar Nuevo Remito
+                    Cargar Remito
+                </Link>
+                <Link to="/remitos" className="btn bg-[var(--surface-hover)] border border-[var(--border)] w-full text-white" style={{ padding: '1.25rem', justifyContent: 'center', textDecoration: 'none' }}>
+                    Ver Historial
                 </Link>
             </div>
 
