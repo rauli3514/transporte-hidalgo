@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Vehiculos from './pages/Vehiculos';
+import Choferes from './pages/Choferes';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -47,6 +49,14 @@ function App() {
           <Route
             path="/dashboard"
             element={session ? <Dashboard /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/vehiculos"
+            element={session ? <Vehiculos /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/choferes"
+            element={session ? <Choferes /> : <Navigate to="/" replace />}
           />
           {/* Agregaremos más rutas protegidas aquí luego */}
         </Routes>

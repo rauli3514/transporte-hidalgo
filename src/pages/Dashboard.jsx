@@ -1,17 +1,26 @@
-import { Link } from 'react-router-dom';
-import { Bird, MapPin, Search, PackagePlus, FileText, CheckCircle2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+import { MapPin, Search, PackagePlus, FileText, CheckCircle2, Truck, Users } from 'lucide-react';
+import { Logo } from '../components/Logo';
 
 export default function Dashboard() {
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        navigate('/');
+    };
+
     return (
         <div className="flex flex-col h-full">
             <header className="mb-6 flex justify-between items-center" style={{ padding: '0.5rem 0' }}>
-                <div className="flex items-center gap-3 text-[var(--primary)]">
-                    <Bird size={28} />
+                <div className="flex items-center gap-3">
+                    <Logo style={{ width: 32, height: 32, color: 'var(--primary)' }} />
                     <h1 style={{ fontSize: '1.25rem', margin: 0, textTransform: 'uppercase', color: 'var(--text-main)' }}>Hidalgo <span style={{ color: 'var(--primary)', fontWeight: '400' }}>Admin</span></h1>
                 </div>
-                <Link to="/" className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', width: 'auto', border: 'none', backgroundColor: 'transparent' }}>
+                <button onClick={handleLogout} className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', width: 'auto', border: 'none', backgroundColor: 'transparent' }}>
                     SALIR
-                </Link>
+                </button>
             </header>
 
             <p className="text-muted text-sm mb-6">Métricas de hoy y accesos rápidos a la operativa de transporte.</p>
@@ -70,6 +79,30 @@ export default function Dashboard() {
                     <span className="badge badge-delivered">OK</span>
                 </Link>
             </div>
-        </div>
+
+            <h3 className="mb-4 mt-8" style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Administración</h3>
+
+            <div className="flex flex-col gap-3 mb-8">
+                <Link to="/vehiculos" className="card flex items-center justify-between mb-0" style={{ textDecoration: 'none', color: 'inherit', padding: '1rem' }}>
+                    <div className="flex items-center gap-4">
+                        <Truck size={24} style={{ color: 'var(--text-muted)' }} />
+                        <div>
+                            <h4 style={{ margin: 0, fontSize: '1rem' }}>Flota de Vehículos</h4>
+                            <p className="text-muted" style={{ fontSize: '0.875rem', margin: 0 }}>Gestionar camiones y fletes</p>
+                        </div>
+                    </div>
+                </Link>
+
+                <Link to="/choferes" className="card flex items-center justify-between mb-0" style={{ textDecoration: 'none', color: 'inherit', padding: '1rem' }}>
+                    <div className="flex items-center gap-4">
+                        <Users size={24} style={{ color: 'var(--text-muted)' }} />
+                        <div>
+                            <h4 style={{ margin: 0, fontSize: '1rem' }}>Nómina de Choferes</h4>
+                            <p className="text-muted" style={{ fontSize: '0.875rem', margin: 0 }}>Personal de entrega</p>
+                        </div>
+                    </div>
+                </Link>
+            </div>
+        </div >
     );
 }
