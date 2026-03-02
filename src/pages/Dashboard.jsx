@@ -1,0 +1,75 @@
+import { Link } from 'react-router-dom';
+import { Bird, MapPin, Search, PackagePlus, FileText, CheckCircle2 } from 'lucide-react';
+
+export default function Dashboard() {
+    return (
+        <div className="flex flex-col h-full">
+            <header className="mb-6 flex justify-between items-center" style={{ padding: '0.5rem 0' }}>
+                <div className="flex items-center gap-3 text-[var(--primary)]">
+                    <Bird size={28} />
+                    <h1 style={{ fontSize: '1.25rem', margin: 0, textTransform: 'uppercase', color: 'var(--text-main)' }}>Hidalgo <span style={{ color: 'var(--primary)', fontWeight: '400' }}>Admin</span></h1>
+                </div>
+                <Link to="/" className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', width: 'auto', border: 'none', backgroundColor: 'transparent' }}>
+                    SALIR
+                </Link>
+            </header>
+
+            <p className="text-muted text-sm mb-6">Métricas de hoy y accesos rápidos a la operativa de transporte.</p>
+
+            <div className="grid gap-4 mb-6" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)' }}>
+                <div className="card text-center mb-0" style={{ padding: '1.5rem 1rem' }}>
+                    <h3 className="text-muted mb-2" style={{ fontSize: '0.8125rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Viajes Curso</h3>
+                    <p style={{ fontSize: '2.5rem', fontWeight: 700, margin: 0 }}>En <span style={{ color: 'var(--primary)' }}>3</span></p>
+                </div>
+                <div className="card text-center mb-0" style={{ padding: '1.5rem 1rem' }}>
+                    <h3 className="text-muted mb-2" style={{ fontSize: '0.8125rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Remitos Hoy</h3>
+                    <p style={{ fontSize: '2.5rem', fontWeight: 700, margin: 0 }}>45</p>
+                </div>
+            </div>
+
+            <div className="mb-8">
+                <button className="btn btn-primary w-full" style={{ padding: '1.25rem', justifyContent: 'center' }}>
+                    <PackagePlus size={20} style={{ marginRight: '0.75rem' }} />
+                    Cargar Nuevo Remito
+                </button>
+            </div>
+
+            <h3 className="mb-4" style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Operativa</h3>
+
+            <div className="flex flex-col gap-3">
+                <Link to="/viajes" className="card flex items-center justify-between mb-0" style={{ textDecoration: 'none', color: 'inherit', padding: '1rem' }}>
+                    <div className="flex items-center gap-4">
+                        <MapPin size={24} style={{ color: 'var(--primary)' }} />
+                        <div>
+                            <h4 style={{ margin: 0, fontSize: '1rem' }}>Mis Viajes de Reparto</h4>
+                            <p className="text-muted" style={{ fontSize: '0.875rem', margin: 0 }}>Actualizar hoja de ruta</p>
+                        </div>
+                    </div>
+                    <span className="badge badge-transit">Ver</span>
+                </Link>
+
+                <Link to="/remitos" className="card flex items-center justify-between mb-0" style={{ textDecoration: 'none', color: 'inherit', padding: '1rem' }}>
+                    <div className="flex items-center gap-4">
+                        <FileText size={24} style={{ color: 'var(--text-muted)' }} />
+                        <div>
+                            <h4 style={{ margin: 0, fontSize: '1rem' }}>Listado de Remitos</h4>
+                            <p className="text-muted" style={{ fontSize: '0.875rem', margin: 0 }}>Ver todos o filtrar por estado</p>
+                        </div>
+                    </div>
+                    <span className="badge" style={{ backgroundColor: 'var(--surface-hover)' }}>Lista</span>
+                </Link>
+
+                <Link to="/seguimiento" className="card flex items-center justify-between mb-0" style={{ textDecoration: 'none', color: 'inherit', padding: '1rem' }}>
+                    <div className="flex items-center gap-4">
+                        <CheckCircle2 size={24} style={{ color: 'var(--status-delivered)' }} />
+                        <div>
+                            <h4 style={{ margin: 0, fontSize: '1rem' }}>Entregas Realizadas</h4>
+                            <p className="text-muted" style={{ fontSize: '0.875rem', margin: 0 }}>Comprobantes y firmas</p>
+                        </div>
+                    </div>
+                    <span className="badge badge-delivered">OK</span>
+                </Link>
+            </div>
+        </div>
+    );
+}
