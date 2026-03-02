@@ -158,10 +158,10 @@ export default function NuevoRemito() {
 
                     <div className="flex flex-col gap-3 mb-4">
                         {bultos.map((b, idx) => (
-                            <div key={idx} className="flex gap-2 items-center" style={{ background: 'var(--background)', padding: '0.5rem', borderRadius: '0.5rem' }}>
-                                <input type="number" min="1" className="form-input w-16 px-1 text-center" placeholder="Cant" value={b.cantidad} onChange={(e) => updateBulto(idx, 'cantidad', e.target.value)} required />
-                                <input type="text" className="form-input flex-1 px-2" placeholder="Detalle (Ej. Cajas M)" value={b.detalle} onChange={(e) => updateBulto(idx, 'detalle', e.target.value)} required />
-                                <input type="number" className="form-input w-16 px-1 text-center" placeholder="Bultos" value={b.bul} onChange={(e) => updateBulto(idx, 'bul', e.target.value)} required />
+                            <div key={idx} className="flex gap-2 items-center" style={{ background: 'var(--surface)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }}>
+                                <input type="number" min="1" className="form-input w-16 px-1 text-center" placeholder="Cant" value={b.cantidad} onChange={(e) => updateBulto(idx, 'cantidad', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} required />
+                                <input type="text" className="form-input flex-1 px-2" placeholder="Detalle (Ej. Cajas M)" value={b.detalle} onChange={(e) => updateBulto(idx, 'detalle', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} required />
+                                <input type="number" className="form-input w-20 px-1 text-center" placeholder="Bultos" value={b.bul} onChange={(e) => updateBulto(idx, 'bul', e.target.value)} style={{ border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0, padding: '0.25rem' }} required />
 
                                 {bultos.length > 1 && (
                                     <button type="button" onClick={() => removeBultoRow(idx)} className="text-muted p-1 hover:text-red-400">
@@ -172,12 +172,12 @@ export default function NuevoRemito() {
                         ))}
                     </div>
 
-                    <button type="button" onClick={addBultoRow} className="btn w-full" style={{ background: 'transparent', border: '1px dashed var(--border)', color: 'var(--text-muted)' }}>
+                    <button type="button" onClick={addBultoRow} className="btn w-full mb-4" style={{ background: 'transparent', border: '1px dashed var(--border)', color: 'var(--text-muted)' }}>
                         <Plus size={18} className="mr-2" /> Agregar Fila
                     </button>
 
-                    <div className="mt-4">
-                        <input type="text" className="form-input" name="observaciones" placeholder="Observaciones / Comentarios permitidos..." value={remito.observaciones} onChange={handleInputChange} />
+                    <div>
+                        <input type="text" className="form-input w-full" name="observaciones" placeholder="Observaciones / Comentarios permitidos..." value={remito.observaciones} onChange={handleInputChange} />
                     </div>
                 </div>
 
