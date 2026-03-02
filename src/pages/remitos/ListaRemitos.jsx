@@ -31,25 +31,18 @@ export default function ListaRemitos() {
         }
     };
 
-    const getStatusIcon = (estado) => {
-        switch (estado) {
-            case 'pendiente': return <Clock size={16} className="text-orange-500" />;
-            case 'en_transito': return <Truck size={16} className="text-blue-500" />;
-            case 'entregado': return <CheckCircle size={16} className="text-green-500" />;
-            default: return <FileText size={16} className="text-muted" />;
-        }
-    };
-
     const StatusBadge = ({ estado }) => {
-        const colors = {
-            pendiente: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
-            en_transito: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-            entregado: 'bg-green-500/10 text-green-500 border-green-500/20',
-        };
-        const styles = colors[estado] || 'bg-gray-500/10 text-gray-500';
+        let color = 'var(--text-muted)';
+        let bgConfig = 'rgba(255,255,255,0.1)';
+        let icon = <FileText size={16} />;
+
+        if (estado === 'pendiente') { color = '#f59e0b'; bgConfig = 'rgba(245, 158, 11, 0.1)'; icon = <Clock size={16} />; }
+        if (estado === 'en_transito') { color = '#3b82f6'; bgConfig = 'rgba(59, 130, 246, 0.1)'; icon = <Truck size={16} />; }
+        if (estado === 'entregado') { color = '#10b981'; bgConfig = 'rgba(16, 185, 129, 0.1)'; icon = <CheckCircle size={16} />; }
+
         return (
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${styles} flex items-center gap-1 w-max`}>
-                {getStatusIcon(estado)}
+            <span style={{ color, backgroundColor: bgConfig, border: `1px solid ${color}`, borderRadius: '9999px', padding: '0.25rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                {icon}
                 {estado.replace('_', ' ').toUpperCase()}
             </span>
         );
@@ -75,13 +68,13 @@ export default function ListaRemitos() {
                     <button onClick={() => setFiltro('')} className={`flex-1 min-w-max py-1.5 px-3 text-sm rounded transition-colors ${filtro === '' ? 'bg-[var(--primary)] text-black font-bold' : 'text-muted'}`}>
                         Todos
                     </button>
-                    <button onClick={() => setFiltro('pendiente')} className={`flex-1 min-w-max py-1.5 px-3 text-sm rounded transition-colors ${filtro === 'pendiente' ? 'bg-orange-500/20 text-orange-400 font-bold' : 'text-muted'}`}>
+                    <button onClick={() => setFiltro('pendiente')} style={{ backgroundColor: filtro === 'pendiente' ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: filtro === 'pendiente' ? '#f59e0b' : 'var(--text-muted)' }} className={`flex-1 min-w-max py-1.5 px-3 text-sm rounded transition-colors ${filtro === 'pendiente' ? 'font-bold' : ''}`}>
                         Pendientes
                     </button>
-                    <button onClick={() => setFiltro('en_transito')} className={`flex-1 min-w-max py-1.5 px-3 text-sm rounded transition-colors ${filtro === 'en_transito' ? 'bg-blue-500/20 text-blue-400 font-bold' : 'text-muted'}`}>
+                    <button onClick={() => setFiltro('en_transito')} style={{ backgroundColor: filtro === 'en_transito' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', color: filtro === 'en_transito' ? '#3b82f6' : 'var(--text-muted)' }} className={`flex-1 min-w-max py-1.5 px-3 text-sm rounded transition-colors ${filtro === 'en_transito' ? 'font-bold' : ''}`}>
                         En Tránsito
                     </button>
-                    <button onClick={() => setFiltro('entregado')} className={`flex-1 min-w-max py-1.5 px-3 text-sm rounded transition-colors ${filtro === 'entregado' ? 'bg-green-500/20 text-green-400 font-bold' : 'text-muted'}`}>
+                    <button onClick={() => setFiltro('entregado')} style={{ backgroundColor: filtro === 'entregado' ? 'rgba(16, 185, 129, 0.2)' : 'transparent', color: filtro === 'entregado' ? '#10b981' : 'var(--text-muted)' }} className={`flex-1 min-w-max py-1.5 px-3 text-sm rounded transition-colors ${filtro === 'entregado' ? 'font-bold' : ''}`}>
                         Entregados
                     </button>
                 </div>
@@ -99,7 +92,7 @@ export default function ListaRemitos() {
                     remitos.map((r) => (
                         <div key={r.id} className="card relative transition-all hover:border-[var(--primary)]" style={{ padding: '1.25rem 1rem', overflow: 'hidden' }}>
                             {/* Borde izquierdo de color segun status */}
-                            <div className={`absolute left-0 top-0 bottom-0 w-1 ${r.estado === 'pendiente' ? 'bg-orange-500' : r.estado === 'en_transito' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
+                            <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: r.estado === 'pendiente' ? '#f59e0b' : r.estado === 'en_transito' ? '#3b82f6' : '#10b981' }}></div>
 
                             <div className="flex justify-between items-start mb-3 pl-2">
                                 <div>
