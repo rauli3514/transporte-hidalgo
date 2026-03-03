@@ -133,15 +133,11 @@ export default function PrintRemito() {
 
             {/* TOTALES Y FIRMA */}
             <div className="flex gap-4 mt-auto">
-                <div className="flex-1 flex flex-col justify-end text-center">
-                    <div className="border-t border-black pt-1 w-3/4 mx-auto" style={{ borderColor: 'black' }}>
-                        <span className="text-xs uppercase block text-black font-bold" style={{ color: 'black' }}>Firma y Aclaración Remitente</span>
-                    </div>
-                </div>
-                <div className="flex-1 flex flex-col justify-end text-center">
-                    <div className="border-t border-black pt-1 w-3/4 mx-auto" style={{ borderColor: 'black' }}>
-                        <span className="text-xs uppercase block text-black font-bold" style={{ color: 'black' }}>Firma y Aclaración Destinatario</span>
-                        <span className="text-[10px] text-gray-800" style={{ color: '#333' }}>Recibí Conforme</span>
+                {/* Espacio para estirar y centrar la firma */}
+                <div className="flex-[2] flex flex-col justify-end text-center px-4">
+                    <div className="border-t border-black pt-1 w-full max-w-[250px] mx-auto mt-10" style={{ borderColor: 'black' }}>
+                        <span className="text-[10px] uppercase block text-black font-bold leading-tight" style={{ color: 'black' }}>Firma y Aclaración Destinatario</span>
+                        <span className="text-[9px] text-gray-800 uppercase block" style={{ color: '#333' }}>Recibí Conforme</span>
                     </div>
                 </div>
 
