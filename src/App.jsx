@@ -10,6 +10,8 @@ import ListaRemitos from './pages/remitos/ListaRemitos';
 import PrintRemito from './pages/remitos/PrintRemito';
 import AsignarViaje from './pages/viajes/AsignarViaje';
 import MisViajes from './pages/viajes/MisViajes';
+import NuevoViaje from './pages/viajes/NuevoViaje';
+import PrintPlanilla from './pages/viajes/PrintPlanilla';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -78,6 +80,14 @@ function App() {
           <Route
             path="/viajes/asignar/:id"
             element={session ? <AsignarViaje /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/viajes/nuevo"
+            element={session ? <NuevoViaje /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/viajes/imprimir/:id"
+            element={session ? <PrintPlanilla /> : <Navigate to="/" replace />}
           />
           <Route
             path="/viajes"

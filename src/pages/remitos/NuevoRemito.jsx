@@ -9,6 +9,10 @@ export default function NuevoRemito() {
     const viajeIdParam = searchParams.get('viaje_id');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Lista de planillas abiertas
+    const [planillasActivas, setPlanillasActivas] = useState([]);
+    const [planillaSeleccionada, setPlanillaSeleccionada] = useState(viajeIdParam || '');
+
     // Datos principales del remito
     const [remito, setRemito] = useState({
         remitente_nombre: '',
@@ -37,6 +41,19 @@ export default function NuevoRemito() {
         flete: 0,
         valor_declarado: 0
     }]);
+
+    useEffect(() => {
+        // Fetch planillas abiertas
+        const fetchPlanillas = async () => {
+            const { data } = await supabase.from('viajes').select('id, nombre, fecha').in('estado', ['abierto', 'en_curso']).order('created_at', { ascending: false });
+            setPlanillasActivas(data || []);
+            // Auto-seleccionar la mas reciente si no vienes de param
+            if (data?.length > 0 && !viajeIdParam) {
+                setPlanillaSeleccionada(data[0].id);
+            }
+        };
+        fetchPlanillas();
+    }, [viajeIdParam]);
 
     useEffect(() => {
         // Auto-cálculo simple (Totales de Flete y Valor de todos los bultos)
@@ -96,11 +113,11 @@ export default function NuevoRemito() {
                 tipo_flete: remito.tipo_flete,
                 contra_reembolso: remito.contra_reembolso,
                 numero_guia: 'HYD-' + Date.now().toString().slice(-6), // Auto Guía Simple Test
-                estado: viajeIdParam ? 'en_transito' : 'pendiente'
+                estado: planillaSeleccionada ? 'en_transito' : 'pendiente'
             };
 
-            if (viajeIdParam) {
-                insertPayload.viaje_id = viajeIdParam;
+            if (planillaSeleccionada) {
+                insertPayload.viaje_id = planillaSeleccionada;
             }
 
             const { data: nuevoRemito, error: remitoError } = await supabase.from('remitos')
@@ -155,6 +172,21 @@ export default function NuevoRemito() {
             </header>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+
+                {/* ASIGNACIÓN DE PLANILLA RESPONSABLE */}
+                <div className="card mb-0 bg-[var(--surface-hover)] border border-[var(--primary)]" style={{ padding: '1rem' }}>
+                    <label className="text-xs uppercase font-bold text-[var(--primary)] mb-2 block">Asignar a Planilla / Hoja de Ruta</label>
+                    <select
+                        className="form-input w-full bg-[var(--background)] border border-[var(--border)] font-bold text-sm"
+                        value={planillaSeleccionada}
+                        onChange={(e) => setPlanillaSeleccionada(e.target.value)}
+                    >
+                        <option value="">-- No Asignar (Dejar Pendiente) --</option>
+                        {planillasActivas.map(p => (
+                            <option key={p.id} value={p.id}>{p.nombre} ({p.fecha.split('-').reverse().join('/')})</option>
+                        ))}
+                    </select>
+                </div>
 
                 {/* BLOQUE REMITENTE Y DESTINATARIO */}
                 <div className="card mb-0" style={{ padding: '1.5rem 1rem' }}>

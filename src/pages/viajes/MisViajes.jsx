@@ -1,21 +1,30 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { ArrowLeft, Truck, PackageCheck, AlertCircle, Clock, MapPin, Navigation, CheckCircle2, Calendar, PlusCircle } from 'lucide-react';
+import { ArrowLeft, Truck, PackageCheck, AlertCircle, Clock, MapPin, Navigation, CheckCircle2, Calendar, PlusCircle, Printer, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function MisViajes() {
     const [viajes, setViajes] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [userProfile, setUserProfile] = useState(null);
 
     useEffect(() => {
+        const fetchProfile = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data } = await supabase.from('usuarios').select('*').eq('id', user.id).single();
+                setUserProfile(data);
+            }
+        };
+        fetchProfile();
         fetchViajes();
     }, []);
 
     const fetchViajes = async () => {
         setLoading(true);
         try {
-            // Buscamos viajes 'en_curso' con sus remitos asociados. 
-            // Esto funcionará tanto para el Admin (verá todos) como para el chofer de esta empresa
+            // Buscamos todos los viajes (Planillas) para que el Admin los pueda gestionar y cerrar.
+            // Limitamos a los ultimos 30 para no colapsar historial infinito.
             const { data, error } = await supabase
                 .from('viajes')
                 .select(`
@@ -24,8 +33,8 @@ export default function MisViajes() {
                     choferes(nombre),
                     remitos(*) 
                 `)
-                .eq('estado', 'en_curso')
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .limit(30);
 
             if (error) throw error;
             setViajes(data || []);
@@ -37,21 +46,31 @@ export default function MisViajes() {
     };
 
     const marcarEntregado = async (remitoId) => {
-        // En una app real de calle, esto abriría la cámara de fotos y la firma táctil.
-        // Por ahora, simulamos el botón mágico de Entregado.
         if (!window.confirm('¿Confirmar como entregado y cobrado?')) return;
-
         try {
             const { error } = await supabase
                 .from('remitos')
                 .update({ estado: 'entregado', fecha_entrega: new Date().toISOString() })
                 .eq('id', remitoId);
-
             if (error) throw error;
             alert('¡Entrega registrada con éxito!');
-            fetchViajes(); // Recargamos para que pase a verde
+            fetchViajes();
         } catch (error) {
             alert('Hubo un error al marcar la entrega: ' + error.message);
+        }
+    };
+
+    const cerrarPlanilla = async (viajeId) => {
+        if (!window.confirm('¿Estás seguro de cerrar esta Planilla? Ya no se podrán agregar remitos nuevos a la misma.')) return;
+        try {
+            const { error } = await supabase
+                .from('viajes')
+                .update({ estado: 'cerrado' })
+                .eq('id', viajeId);
+            if (error) throw error;
+            fetchViajes();
+        } catch (error) {
+            alert('Error cerrando planilla: ' + error.message);
         }
     };
 
@@ -65,10 +84,15 @@ export default function MisViajes() {
                         </Link>
                         <div className="flex items-center gap-2 text-[var(--primary)]">
                             <Truck size={24} />
-                            <h1 style={{ fontSize: '1.25rem', margin: 0, textTransform: 'uppercase', color: 'var(--text-main)' }}>Hoja de Ruta</h1>
+                            <h1 style={{ fontSize: '1.25rem', margin: 0, textTransform: 'uppercase', color: 'var(--text-main)' }}>Planillas de Viajes</h1>
                         </div>
                     </div>
                 </div>
+                {userProfile?.rol !== 'transportista' && (
+                    <Link to="/viajes/nuevo" className="btn bg-[var(--surface-hover)] border border-[var(--border)] text-[var(--text-main)] w-full py-3 flex justify-center gap-2">
+                        <PlusCircle size={20} /> Abrir Nueva Planilla / Turno
+                    </Link>
+                )}
             </header>
 
             <div className="flex flex-col gap-8">
@@ -100,8 +124,9 @@ export default function MisViajes() {
                                         {/* ENCABEZADO DEL VIAJE */}
                                         <div className="bg-[var(--surface)] p-4 border-b border-[var(--border)] flex justify-between items-start">
                                             <div>
-                                                <h2 className="text-lg font-bold mb-1 uppercase tracking-wide text-[var(--primary)]">
+                                                <h2 className="text-lg font-bold mb-1 uppercase tracking-wide text-[var(--primary)] flex items-center gap-2">
                                                     {viaje.nombre}
+                                                    {viaje.estado === 'cerrado' && <span className="text-[10px] font-bold bg-red-500/10 text-red-500 px-2 py-0.5 rounded border border-red-500/20">CERRADO</span>}
                                                 </h2>
                                                 <div className="text-xs text-muted flex gap-2">
                                                     <span><b>Chofer:</b> {viaje.choferes?.nombre || 'Desconocido'}</span>
@@ -111,6 +136,19 @@ export default function MisViajes() {
                                                 {viaje.notas && (
                                                     <div className="mt-2 text-sm bg-orange-500/10 text-orange-400 p-2 rounded">
                                                         <b>Nota Sup:</b> {viaje.notas}
+                                                    </div>
+                                                )}
+
+                                                {userProfile?.rol !== 'transportista' && (
+                                                    <div className="flex items-center gap-2 mt-3">
+                                                        <Link to={`/viajes/imprimir/${viaje.id}`} className="btn bg-gray-600/20 text-[var(--text-main)] border border-[var(--border)] text-xs px-3 py-1.5 flex gap-1">
+                                                            <Printer size={14} /> Imprimir A4
+                                                        </Link>
+                                                        {viaje.estado !== 'cerrado' && (
+                                                            <button onClick={() => cerrarPlanilla(viaje.id)} className="btn bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-colors text-xs px-3 py-1.5 flex gap-1">
+                                                                <XCircle size={14} /> Cerrar Planilla
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>
@@ -177,11 +215,13 @@ export default function MisViajes() {
                                                 )}
 
                                                 {/* Botón rápido para choferes que arman remitos en calle */}
-                                                <div className="mt-4 pt-4 border-t border-[var(--border)]">
-                                                    <Link to={`/remitos/nuevo?viaje_id=${viaje.id}`} className="btn bg-[var(--surface-hover)] border border-[var(--border)] text-muted w-full text-sm flex items-center justify-center gap-2 hover:text-[var(--text-main)]" style={{ textDecoration: 'none', padding: '0.75rem' }}>
-                                                        <PlusCircle size={18} /> Cargar Retiro No Programado
-                                                    </Link>
-                                                </div>
+                                                {viaje.estado !== 'cerrado' && (
+                                                    <div className="mt-4 pt-4 border-t border-[var(--border)]">
+                                                        <Link to={`/remitos/nuevo?viaje_id=${viaje.id}`} className="btn bg-[var(--surface-hover)] border border-[var(--border)] text-[var(--text-accent)] font-bold w-full text-sm flex items-center justify-center gap-2 hover:text-[var(--text-main)]" style={{ textDecoration: 'none', padding: '0.75rem' }}>
+                                                            <PlusCircle size={18} /> Cargar Nuevo Remito a Esta Planilla
+                                                        </Link>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
