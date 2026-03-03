@@ -29,9 +29,9 @@ export default function Dashboard() {
             <header className="mb-6 flex justify-between items-center" style={{ padding: '0.5rem 0' }}>
                 <div className="flex items-center gap-3">
                     <Logo style={{ width: 32, height: 32, color: 'var(--primary)' }} />
-                    <h1 style={{ fontSize: '1.25rem', margin: 0, textTransform: 'uppercase', color: 'var(--text-main)' }}>
-                        Hidalgo <span style={{ color: 'var(--primary)', fontWeight: '400' }}>
-                            {userProfile?.rol === 'transportista' ? 'Chofer' : 'Admin'}
+                    <h1 style={{ fontSize: '1.25rem', margin: 0, textTransform: 'uppercase', color: 'var(--text-main)', display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+                        Transporte <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>
+                            Hidalgo <span style={{ color: 'var(--text-muted)', fontWeight: '400', fontSize: '0.9rem' }}>{userProfile?.rol === 'transportista' ? 'Chofer' : 'Admin'}</span>
                         </span>
                     </h1>
                 </div>
@@ -54,18 +54,20 @@ export default function Dashboard() {
                             <p style={{ fontSize: '2.5rem', fontWeight: 700, margin: 0 }}>45</p>
                         </div>
                     </div>
-
-                    <div className="mb-8 grid gap-3 grid-cols-2">
-                        <Link to="/remitos/nuevo" className="btn btn-primary w-full" style={{ padding: '1.25rem', justifyContent: 'center', textDecoration: 'none' }}>
-                            <PackagePlus size={20} style={{ marginRight: '0.75rem' }} />
-                            Cargar Remito
-                        </Link>
-                        <Link to="/remitos" className="btn bg-[var(--surface-hover)] border border-[var(--border)] w-full text-white" style={{ padding: '1.25rem', justifyContent: 'center', textDecoration: 'none' }}>
-                            Ver Historial
-                        </Link>
-                    </div>
                 </>
             )}
+
+            <div className="mb-8 grid gap-3 grid-cols-2">
+                <Link to="/remitos/nuevo" className="btn btn-primary w-full" style={{ padding: '1.25rem', justifyContent: 'center', textDecoration: 'none' }}>
+                    <PackagePlus size={20} style={{ marginRight: '0.75rem' }} />
+                    Cargar Remito
+                </Link>
+                {userProfile?.rol !== 'transportista' && (
+                    <Link to="/remitos" className="btn bg-[var(--surface-hover)] border border-[var(--border)] w-full text-white" style={{ padding: '1.25rem', justifyContent: 'center', textDecoration: 'none' }}>
+                        Ver Historial
+                    </Link>
+                )}
+            </div>
 
             <h3 className="mb-4" style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Operativa</h3>
 

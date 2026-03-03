@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { PackagePlus, ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 export default function NuevoRemito() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const viajeIdParam = searchParams.get('viaje_id');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Datos principales del remito
@@ -77,7 +79,7 @@ export default function NuevoRemito() {
             const { data: userData } = await supabase.from('usuarios').select('empresa_id').eq('id', user.id).single();
 
             // 1. Crear el Remito Padre
-            const { data: nuevoRemito, error: remitoError } = await supabase.from('remitos').insert([{
+            const insertPayload = {
                 empresa_id: userData.empresa_id,
                 remitente_nombre: remito.remitente_nombre,
                 remitente_direccion: remito.remitente_direccion,
@@ -94,8 +96,15 @@ export default function NuevoRemito() {
                 tipo_flete: remito.tipo_flete,
                 contra_reembolso: remito.contra_reembolso,
                 numero_guia: 'HYD-' + Date.now().toString().slice(-6), // Auto Guía Simple Test
-                estado: 'pendiente'
-            }]).select().single();
+                estado: viajeIdParam ? 'en_transito' : 'pendiente'
+            };
+
+            if (viajeIdParam) {
+                insertPayload.viaje_id = viajeIdParam;
+            }
+
+            const { data: nuevoRemito, error: remitoError } = await supabase.from('remitos')
+                .insert([insertPayload]).select().single();
 
             if (remitoError) throw remitoError;
 
@@ -114,8 +123,12 @@ export default function NuevoRemito() {
 
             if (bultosError) throw bultosError;
 
-            alert(`Remito Nº ${nuevoRemito.numero_remito} generado correctamente.`);
-            navigate('/dashboard'); // Volvemos al inicio o a la lista de remitos
+            alert(`Remito Nº ${nuevoRemito.numero_guia || ''} generado correctamente.`);
+            if (viajeIdParam) {
+                navigate('/viajes'); // Vuelve a la hoja de ruta del chofer
+            } else {
+                navigate('/dashboard'); // Volvemos al inicio para admin
+            }
 
         } catch (error) {
             console.error('Error guardando remito:', error.message);
@@ -129,12 +142,14 @@ export default function NuevoRemito() {
         <div className="flex flex-col h-full overflow-y-auto pb-10">
             <header className="mb-6 flex justify-between items-center" style={{ padding: '0.5rem 0' }}>
                 <div className="flex items-center gap-3">
-                    <Link to="/dashboard" className="text-muted" style={{ display: 'flex' }}>
+                    <Link to={viajeIdParam ? "/viajes" : "/dashboard"} className="text-muted" style={{ display: 'flex' }}>
                         <ArrowLeft size={24} />
                     </Link>
                     <div className="flex items-center gap-2 text-[var(--primary)]">
                         <PackagePlus size={24} />
-                        <h1 style={{ fontSize: '1.25rem', margin: 0, textTransform: 'uppercase', color: 'var(--text-main)' }}>Nuevo Remito</h1>
+                        <h1 style={{ fontSize: '1.25rem', margin: 0, textTransform: 'uppercase', color: 'var(--text-main)' }}>
+                            {viajeIdParam ? 'Nuevo Retiro' : 'Nuevo Remito'}
+                        </h1>
                     </div>
                 </div>
             </header>
