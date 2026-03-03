@@ -174,10 +174,10 @@ export default function PrintRemito() {
     );
 
     return (
-        <div className="print-wrapper bg-white min-h-screen text-black relative">
+        <div className="print-wrapper min-h-screen text-black relative" style={{ backgroundColor: '#525252' }}>
             {/* BOTONERA FLOTANTE (No se imprime por CSS) */}
             <div className="no-print fixed top-4 right-4 flex gap-3 z-50">
-                <Link to="/remitos" className="btn bg-gray-800 text-white border border-gray-600 shadow-lg px-4 flex items-center gap-2 hover:bg-gray-700">
+                <Link to="/remitos" className="btn text-white shadow-lg px-4 flex items-center gap-2 hover:bg-gray-700" style={{ backgroundColor: '#1f2937', border: '1px solid #374151' }}>
                     <ArrowLeft size={18} /> Volver
                 </Link>
                 <button onClick={handlePrint} className="btn bg-[var(--primary)] text-black font-bold shadow-lg px-6 flex items-center gap-2 hover:scale-105 transition-transform" style={{ padding: '0.75rem 1.5rem' }}>
@@ -186,7 +186,7 @@ export default function PrintRemito() {
             </div>
 
             {/* AREA A4 */}
-            <div className="a4-page bg-white mx-auto overflow-hidden flex flex-col">
+            <div className="a4-page mx-auto overflow-hidden flex flex-col" style={{ backgroundColor: 'white' }}>
                 <CopiaRemito titulo="ORIGINAL" />
             </div>
 
@@ -194,13 +194,12 @@ export default function PrintRemito() {
             <style dangerouslySetInnerHTML={{
                 __html: `
                 .print-wrapper {
-                    background-color: #525252;
                     padding: 2rem 1rem;
                 }
                 .a4-page {
                     width: 210mm;
                     height: 297mm;
-                    background: white;
+                    background-color: white !important;
                     margin: 0 auto;
                     box-shadow: 0 10px 25px rgba(0,0,0,0.5);
                     display: flex;
@@ -213,7 +212,7 @@ export default function PrintRemito() {
                         margin: 0;
                     }
                     body {
-                        background: white !important;
+                        background-color: white !important;
                         -webkit-print-color-adjust: exact;
                         print-color-adjust: exact;
                     }
@@ -222,13 +221,14 @@ export default function PrintRemito() {
                     }
                     .print-wrapper {
                         padding: 0;
-                        background-color: white;
+                        background-color: white !important;
                     }
                     .a4-page {
                         width: 100%;
                         height: 100%;
                         box-shadow: none;
                         margin: 0;
+                        background-color: white !important;
                     }
                 }
             `}} />
