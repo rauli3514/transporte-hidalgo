@@ -8,6 +8,7 @@ import Choferes from './pages/Choferes';
 import NuevoRemito from './pages/remitos/NuevoRemito';
 import ListaRemitos from './pages/remitos/ListaRemitos';
 import AsignarViaje from './pages/viajes/AsignarViaje';
+import MisViajes from './pages/viajes/MisViajes';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -72,6 +73,10 @@ function App() {
           <Route
             path="/viajes/asignar/:id"
             element={session ? <AsignarViaje /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/viajes"
+            element={session ? <MisViajes /> : <Navigate to="/" replace />}
           />
           {/* Agregaremos más rutas protegidas aquí luego */}
         </Routes>
