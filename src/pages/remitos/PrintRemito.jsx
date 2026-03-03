@@ -62,14 +62,17 @@ export default function PrintRemito() {
     });
 
     const CopiaRemito = ({ titulo }) => (
-        <div className="print-copy flex flex-col justify-between bg-white text-black" style={{ height: '148mm', padding: '10mm', borderBottom: titulo === 'ORIGINAL' ? '1px dashed #ccc' : 'none', color: 'black' }}>
+        <div className="print-copy flex flex-col justify-between bg-white text-black" style={{ height: '50%', minHeight: '148mm', padding: '10mm', color: 'black' }}>
             {/* ENCABEZADO A4 */}
             <div className="flex justify-between items-start mb-4 border-b-2 border-black pb-4">
                 <div className="flex items-center gap-4">
-                    <img src="/logo_pegasus.png" alt="Logo" style={{ width: '60px', height: '60px', objectFit: 'contain' }} />
+                    <img src="/logo_pegasus.png" alt="Logo" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
                     <div className="text-left">
-                        <h1 className="text-2xl font-black uppercase m-0 leading-none tracking-tight text-black" style={{ color: 'black' }}>Transporte Hidalgo</h1>
-                        <p className="text-sm font-bold text-gray-800 m-0" style={{ color: '#333' }}>Logística y Distribución - Tucumán</p>
+                        <h1 className="text-3xl font-black uppercase m-0 leading-none tracking-tight text-black" style={{ color: 'black' }}>Transporte Hidalgo</h1>
+                        <p className="text-sm font-bold text-black m-0 mt-1" style={{ color: 'black' }}>de Ramón Dolores Hidalgo</p>
+                        <p className="text-xs font-bold text-black m-0" style={{ color: 'black' }}>TEL.: (0362) 4467450 - CEL: 3624-643066</p>
+                        <p className="text-xs font-bold text-black m-0" style={{ color: 'black' }}>CHUBUT 740 - VILLA SARMIENTO - (3514) FONTANA</p>
+                        <p className="text-xs font-bold text-black m-0" style={{ color: 'black' }}>RESPONSABLE INSCRIPTO</p>
                     </div>
                 </div>
                 <div className="text-right flex flex-col items-end">
@@ -183,9 +186,8 @@ export default function PrintRemito() {
             </div>
 
             {/* AREA A4 */}
-            <div className="a4-page bg-white mx-auto overflow-hidden">
+            <div className="a4-page bg-white mx-auto overflow-hidden flex flex-col">
                 <CopiaRemito titulo="ORIGINAL" />
-                <CopiaRemito titulo="DUPLICADO" />
             </div>
 
             {/* ESTILOS DE IMPRESION INYECTADOS */}
