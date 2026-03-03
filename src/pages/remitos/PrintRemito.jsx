@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Printer, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { Logo } from '../../components/Logo';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function PrintRemito() {
     const { id } = useParams();
@@ -61,6 +62,8 @@ export default function PrintRemito() {
         day: '2-digit', month: '2-digit', year: 'numeric'
     });
 
+    const trackingUrl = `${window.location.origin}/seguimiento/${remito?.numero_guia}`;
+
     const CopiaRemito = ({ titulo }) => (
         <div className="print-copy flex flex-col justify-between bg-white text-black" style={{ height: '50%', minHeight: '148mm', padding: '10mm', color: 'black' }}>
             {/* ENCABEZADO A4 */}
@@ -75,13 +78,23 @@ export default function PrintRemito() {
                         <p className="text-xs font-bold text-black m-0" style={{ color: 'black' }}>RESPONSABLE INSCRIPTO</p>
                     </div>
                 </div>
-                <div className="text-right flex flex-col items-end">
-                    <div className="border-2 border-black p-2 bg-gray-100 text-center w-32 mb-1" style={{ borderColor: 'black', background: '#f3f4f6' }}>
-                        <span className="text-xs font-bold block text-black" style={{ color: 'black' }}>REMITO Nº</span>
-                        <span className="font-mono font-bold text-lg text-black" style={{ color: 'black' }}>{remito.numero_guia || 'SN'}</span>
+                <div className="text-right flex flex-col items-end gap-2">
+                    <div className="flex items-start gap-4">
+                        <div className="flex flex-col items-center">
+                            <QRCodeSVG value={trackingUrl} size={60} level="M" />
+                            <span className="text-[8px] font-bold mt-1 text-black">SEGUIMIENTO DIGITAL</span>
+                        </div>
+                        <div className="flex flex-col items-end">
+                            <div className="border-2 border-black p-2 bg-gray-100 text-center w-36 mb-1" style={{ borderColor: 'black', background: '#f3f4f6' }}>
+                                <span className="text-xs font-bold block text-black uppercase tracking-wider" style={{ color: 'black' }}>REMITO N°</span>
+                                <span className="font-mono font-black text-xl text-black" style={{ color: 'black' }}>{remito.numero_guia || 'SN'}</span>
+                            </div>
+                            <span className="text-xs bg-black text-white px-2 py-0.5 rounded uppercase font-bold tracking-widest w-full text-center" style={{ background: 'black', color: 'white' }}>{titulo}</span>
+                        </div>
                     </div>
-                    <span className="text-xs bg-black text-white px-2 py-0.5 rounded uppercase font-bold tracking-widest" style={{ background: 'black', color: 'white' }}>{titulo}</span>
-                    <span className="text-sm font-bold mt-1 text-black" style={{ color: 'black' }}>Fecha: {fechaFormat}</span>
+                    <div>
+                        <span className="text-sm font-bold text-black border-b border-black inline-block pb-0.5" style={{ color: 'black', borderColor: 'black' }}>Fecha: {fechaFormat}</span>
+                    </div>
                 </div>
             </div>
 
@@ -134,11 +147,36 @@ export default function PrintRemito() {
             {/* TOTALES Y FIRMA */}
             <div className="flex gap-4 mt-auto">
                 {/* Espacio para estirar y centrar la firma */}
-                <div className="flex-[2] flex flex-col justify-end text-center px-4">
-                    <div className="border-t border-black pt-1 w-full max-w-[250px] mx-auto mt-10" style={{ borderColor: 'black' }}>
-                        <span className="text-[10px] uppercase block text-black font-bold leading-tight" style={{ color: 'black' }}>Firma y Aclaración Destinatario</span>
-                        <span className="text-[9px] text-gray-800 uppercase block" style={{ color: '#333' }}>Recibí Conforme</span>
-                    </div>
+                <div className="flex-[2] flex flex-col justify-end px-2">
+                    {remito.firma_url ? (
+                        <div className="border border-black flex justify-between rounded items-center p-2 h-28 relative" style={{ borderColor: 'black' }}>
+                            <span className="absolute -top-3 left-2 bg-white px-1 text-[10px] font-bold uppercase" style={{ background: 'white', color: 'black' }}>Recibí Conforme</span>
+                            <div className="flex flex-col text-left justify-center gap-2 text-xs" style={{ color: 'black' }}>
+                                <p className="m-0"><b>FECHA:</b> {new Date(remito.fecha_entrega || remito.updated_at).toLocaleDateString('es-AR')}</p>
+                                <p className="m-0"><b>ACLARACIÓN:</b> {remito.firma_aclaracion?.toUpperCase() || '-'}</p>
+                                <p className="m-0"><b>DNI/CUIT:</b> {remito.firma_dni || '-'}</p>
+                            </div>
+                            <div className="flex flex-col items-center justify-end h-full">
+                                <img src={remito.firma_url} alt="Firma" className="max-h-[60px] object-contain" style={{ filter: 'grayscale(100%) brightness(0.8) contrast(1.2)' }} />
+                                <div className="border-t border-black w-40 text-center mt-1" style={{ borderColor: 'black' }}>
+                                    <span className="text-[9px] uppercase font-bold" style={{ color: 'black' }}>Firma Destinatario</span>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="border border-black flex justify-between rounded p-2 h-28 relative" style={{ borderColor: 'black' }}>
+                            <span className="absolute -top-3 left-2 bg-white px-1 text-[10px] font-bold uppercase" style={{ background: 'white', color: 'black' }}>Recibí Conforme</span>
+                            <div className="flex flex-col text-left justify-around text-xs w-1/3" style={{ color: 'black' }}>
+                                <p className="m-0"><b>FECHA:</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+                                <p className="m-0"><b>HORA:</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+                            </div>
+                            <div className="flex flex-col items-center justify-end w-1/2">
+                                <div className="border-t border-black w-full text-center pt-1" style={{ borderColor: 'black' }}>
+                                    <span className="text-[9px] uppercase font-bold" style={{ color: 'black' }}>Firma, Aclaración y DNI</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Cuadro de Cobro Final */}
@@ -182,7 +220,7 @@ export default function PrintRemito() {
             </div>
 
             {/* AREA A4 */}
-            <div className="a4-page mx-auto overflow-hidden flex flex-col" style={{ backgroundColor: 'white' }}>
+            <div className="a4-page mx-auto overflow-hidden flex flex-col justify-start" style={{ backgroundColor: 'white' }}>
                 <CopiaRemito titulo="ORIGINAL" />
             </div>
 
@@ -200,6 +238,10 @@ export default function PrintRemito() {
                     box-shadow: 0 10px 25px rgba(0,0,0,0.5);
                     display: flex;
                     flex-direction: column;
+                }
+                .a4-page {
+                    color: black !important;
+                    border-color: black !important;
                 }
                 
                 @media print {
@@ -225,6 +267,7 @@ export default function PrintRemito() {
                         box-shadow: none;
                         margin: 0;
                         background-color: white !important;
+                        color: black !important;
                     }
                 }
             `}} />

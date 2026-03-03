@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { Users, Plus, Trash2, ArrowLeft, Key, UserPlus } from 'lucide-react';
+import { Users, Plus, Trash2, ArrowLeft, Key, UserPlus, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // Cliente estricto y sin memoria (para crear choferes sin desloguear al Admin)
@@ -20,6 +20,30 @@ export default function Choferes() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [dialog, setDialog] = useState({ isOpen: false, title: '', message: '', isDestructive: false, onConfirm: null, confirmText: 'Confirmar' });
+
+    const showAlert = (title, message, isDestructive = false) => {
+        setDialog({
+            isOpen: true,
+            title,
+            message,
+            isDestructive,
+            isAlert: true,
+            onConfirm: () => setDialog({ ...dialog, isOpen: false })
+        });
+    };
+
+    const showConfirm = (title, message, confirmText, isDestructive, onConfirm) => {
+        setDialog({
+            isOpen: true,
+            title,
+            message,
+            confirmText,
+            isDestructive,
+            isAlert: false,
+            onConfirm
+        });
+    };
 
     useEffect(() => {
         fetchChoferes();
@@ -27,7 +51,7 @@ export default function Choferes() {
 
     const fetchChoferes = async () => {
         try {
-            const { data, error } = await supabase.from('choferes').select('*').order('created_at', { ascending: false });
+            const { data, error } = await supabase.from('choferes').select('*').neq('estado', 'inactivo').order('created_at', { ascending: false });
             if (error) throw error;
             setChoferes(data || []);
         } catch (error) {
@@ -77,24 +101,43 @@ export default function Choferes() {
             if (error) throw error;
             setChoferes([data[0], ...choferes]);
             setNombre(''); setDni(''); setTelefono(''); setUsername(''); setPassword('');
-            alert('¡Chofer creado y habilitado para el sistema!');
+            showAlert('Éxito', '¡Chofer creado y habilitado para el sistema!');
         } catch (error) {
             console.error('Error al agregar chofer:', error.message);
-            alert('Error: ' + error.message);
+            showAlert('Error', 'No se pudo crear el chofer: ' + error.message, true);
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const deleteChofer = async (id) => {
-        if (!window.confirm('¿Eliminar este chofer?')) return;
-        try {
-            const { error } = await supabase.from('choferes').delete().eq('id', id);
-            if (error) throw error;
-            setChoferes(choferes.filter(c => c.id !== id));
-        } catch (error) {
-            console.error('Error al eliminar:', error.message);
-        }
+    const deleteChofer = (id) => {
+        showConfirm(
+            'Eliminar Chofer',
+            '¿Estás seguro de que deseas eliminar este chofer de la flota permanentemente?',
+            'Sí, Eliminar',
+            true,
+            async () => {
+                try {
+                    const { error } = await supabase.from('choferes').delete().eq('id', id);
+                    if (error) {
+                        if (error.code === '23503') {
+                            const { error: softError } = await supabase.from('choferes').update({ estado: 'inactivo' }).eq('id', id);
+                            if (softError) throw softError;
+
+                            setChoferes(choferes.filter(c => c.id !== id));
+                            showAlert('Desvinculación Segura', 'El chofer tiene viajes históricos asociados. Para evitar corrupción en la historia de despachos, fue marcado como "INACTIVO" y ya no podrá tener viajes nuevos.');
+                            return;
+                        }
+                        throw error;
+                    }
+                    setChoferes(choferes.filter(c => c.id !== id));
+                    showAlert('Chofer eliminado', 'El chofer fue removido de la lista exitosamente.');
+                } catch (error) {
+                    console.error('Error al eliminar:', error.message);
+                    showAlert('Error', 'No se pudo eliminar el chofer: ' + error.message, true);
+                }
+            }
+        );
     };
 
     return (
@@ -202,6 +245,39 @@ export default function Choferes() {
                     ))
                 )}
             </div>
+
+            {/* Custom Dialog / Modal */}
+            {dialog.isOpen && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                    <div style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '1rem', width: '100%', maxWidth: '400px', padding: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', position: 'relative' }}>
+                        <h3 className={`text-xl font-bold mb-3 flex items-center gap-2 ${dialog.isDestructive ? 'text-red-500' : 'text-[var(--primary)]'}`}>
+                            <AlertCircle />
+                            {dialog.title}
+                        </h3>
+                        <p className="text-muted mb-6 text-sm">{dialog.message}</p>
+
+                        <div className="flex gap-3 justify-end">
+                            {!dialog.isAlert && (
+                                <button
+                                    onClick={() => setDialog({ ...dialog, isOpen: false })}
+                                    className="px-4 py-2 rounded-md bg-[var(--surface-hover)] border border-[var(--border)] hover:bg-gray-700 text-white font-medium transition-colors text-sm"
+                                >
+                                    Cancelar
+                                </button>
+                            )}
+                            <button
+                                onClick={() => {
+                                    if (dialog.onConfirm) dialog.onConfirm();
+                                    setDialog({ ...dialog, isOpen: false });
+                                }}
+                                className={`px-4 py-2 rounded-md font-bold transition-colors text-sm shadow-md ${dialog.isDestructive ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black'}`}
+                            >
+                                {dialog.isAlert ? 'Aceptar' : (dialog.confirmText || 'Confirmar')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

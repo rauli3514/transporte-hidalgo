@@ -1,13 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { Truck, ArrowLeft, Calendar, User, CheckCircle2 } from 'lucide-react';
+import { Truck, ArrowLeft, Calendar, User, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function NuevoViaje() {
     const navigate = useNavigate();
     const [choferes, setChoferes] = useState([]);
     const [vehiculos, setVehiculos] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [dialog, setDialog] = useState({ isOpen: false, title: '', message: '', isDestructive: false, onConfirm: null, confirmText: 'Confirmar' });
+
+    const showAlert = (title, message, isDestructive = false) => {
+        setDialog({
+            isOpen: true,
+            title,
+            message,
+            isDestructive,
+            isAlert: true,
+            onConfirm: () => setDialog({ ...dialog, isOpen: false })
+        });
+    };
 
     const [formData, setFormData] = useState({
         chofer_id: '',
@@ -55,7 +67,7 @@ export default function NuevoViaje() {
             if (error) throw error;
             navigate('/viajes');
         } catch (error) {
-            alert('Error al crear planilla: ' + error.message);
+            showAlert('Error', 'Error al crear la planilla: ' + error.message, true);
         } finally {
             setIsSubmitting(false);
         }
@@ -118,6 +130,39 @@ export default function NuevoViaje() {
                     </button>
                 </div>
             </form>
+
+            {/* Custom Dialog / Modal */}
+            {dialog.isOpen && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                    <div style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '1rem', width: '100%', maxWidth: '400px', padding: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', position: 'relative' }}>
+                        <h3 className={`text-xl font-bold mb-3 flex items-center gap-2 ${dialog.isDestructive ? 'text-red-500' : 'text-[var(--primary)]'}`}>
+                            <AlertCircle />
+                            {dialog.title}
+                        </h3>
+                        <p className="text-muted mb-6 text-sm">{dialog.message}</p>
+
+                        <div className="flex gap-3 justify-end">
+                            {!dialog.isAlert && (
+                                <button
+                                    onClick={() => setDialog({ ...dialog, isOpen: false })}
+                                    className="px-4 py-2 rounded-md bg-[var(--surface-hover)] border border-[var(--border)] hover:bg-gray-700 text-white font-medium transition-colors text-sm"
+                                >
+                                    Cancelar
+                                </button>
+                            )}
+                            <button
+                                onClick={() => {
+                                    if (dialog.onConfirm) dialog.onConfirm();
+                                    setDialog({ ...dialog, isOpen: false });
+                                }}
+                                className={`px-4 py-2 rounded-md font-bold transition-colors text-sm shadow-md ${dialog.isDestructive ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black'}`}
+                            >
+                                {dialog.isAlert ? 'Aceptar' : (dialog.confirmText || 'Confirmar')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

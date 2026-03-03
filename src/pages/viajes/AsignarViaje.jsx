@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Truck, ArrowLeft, Calendar, User, FileText, CheckCircle2 } from 'lucide-react';
+import { Truck, ArrowLeft, Calendar, User, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 export default function AsignarViaje() {
@@ -13,6 +13,18 @@ export default function AsignarViaje() {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [dialog, setDialog] = useState({ isOpen: false, title: '', message: '', isDestructive: false, onConfirm: null, confirmText: 'Confirmar' });
+
+    const showAlert = (title, message, isDestructive = false, onConfirm = null) => {
+        setDialog({
+            isOpen: true,
+            title,
+            message,
+            isDestructive,
+            isAlert: true,
+            onConfirm: onConfirm || (() => setDialog({ ...dialog, isOpen: false }))
+        });
+    };
 
     const [formData, setFormData] = useState({
         chofer_id: '',
@@ -54,7 +66,7 @@ export default function AsignarViaje() {
             }
         } catch (error) {
             console.error('Error fetching data:', error.message);
-            alert('Error al cargar datos: ' + error.message);
+            showAlert('Error', 'Error al cargar datos: ' + error.message, true);
         } finally {
             setLoading(false);
         }
@@ -69,7 +81,7 @@ export default function AsignarViaje() {
         e.preventDefault();
 
         if (!formData.chofer_id || !formData.vehiculo_id) {
-            alert('Debes seleccionar un chofer y un vehículo.');
+            showAlert('Atención', 'Debes seleccionar un chofer y un vehículo para poder asignar el viaje.', true);
             return;
         }
 
@@ -102,12 +114,13 @@ export default function AsignarViaje() {
 
             if (updateErr) throw updateErr;
 
-            alert('¡Fantástico! El Remito y el Viaje ya fueron asignados, ahora lo tiene el Chofer.');
-            navigate('/remitos'); // Volvemos al historial
+            showAlert('¡Éxito!', 'El Remito y el Viaje ya fueron asignados, ahora el Chofer lo puede gestionar.', false, () => {
+                navigate('/remitos'); // Volvemos al historial al confirmar
+            });
 
         } catch (error) {
             console.error('Error al asignar viaje:', error.message);
-            alert('Hubo un error en la asignación: ' + error.message);
+            showAlert('Error', 'Hubo un error en la asignación: ' + error.message, true);
         } finally {
             setIsSubmitting(false);
         }
@@ -241,6 +254,39 @@ export default function AsignarViaje() {
                 </button>
 
             </form>
+
+            {/* Custom Dialog / Modal */}
+            {dialog.isOpen && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                    <div style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '1rem', width: '100%', maxWidth: '400px', padding: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', position: 'relative' }}>
+                        <h3 className={`text-xl font-bold mb-3 flex items-center gap-2 ${dialog.isDestructive ? 'text-red-500' : 'text-[var(--primary)]'}`}>
+                            <AlertCircle />
+                            {dialog.title}
+                        </h3>
+                        <p className="text-muted mb-6 text-sm">{dialog.message}</p>
+
+                        <div className="flex gap-3 justify-end">
+                            {!dialog.isAlert && (
+                                <button
+                                    onClick={() => setDialog({ ...dialog, isOpen: false })}
+                                    className="px-4 py-2 rounded-md bg-[var(--surface-hover)] border border-[var(--border)] hover:bg-gray-700 text-white font-medium transition-colors text-sm"
+                                >
+                                    Cancelar
+                                </button>
+                            )}
+                            <button
+                                onClick={() => {
+                                    if (dialog.onConfirm) dialog.onConfirm();
+                                    setDialog({ ...dialog, isOpen: false });
+                                }}
+                                className={`px-4 py-2 rounded-md font-bold transition-colors text-sm shadow-md ${dialog.isDestructive ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black'}`}
+                            >
+                                {dialog.isAlert ? 'Aceptar' : (dialog.confirmText || 'Confirmar')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

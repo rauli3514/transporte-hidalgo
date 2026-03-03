@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { PackagePlus, ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
+import { PackagePlus, ArrowLeft, Save, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 export default function NuevoRemito() {
@@ -8,6 +8,18 @@ export default function NuevoRemito() {
     const [searchParams] = useSearchParams();
     const viajeIdParam = searchParams.get('viaje_id');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [dialog, setDialog] = useState({ isOpen: false, title: '', message: '', isDestructive: false, onConfirm: null, confirmText: 'Confirmar' });
+
+    const showAlert = (title, message, isDestructive = false, onConfirm = null) => {
+        setDialog({
+            isOpen: true,
+            title,
+            message,
+            isDestructive,
+            isAlert: true,
+            onConfirm: onConfirm || (() => setDialog({ ...dialog, isOpen: false }))
+        });
+    };
 
     // Lista de planillas abiertas
     const [planillasActivas, setPlanillasActivas] = useState([]);
@@ -47,9 +59,11 @@ export default function NuevoRemito() {
         const fetchPlanillas = async () => {
             const { data } = await supabase.from('viajes').select('id, nombre, fecha').in('estado', ['abierto', 'en_curso']).order('created_at', { ascending: false });
             setPlanillasActivas(data || []);
-            // Auto-seleccionar la mas reciente si no vienes de param
-            if (data?.length > 0 && !viajeIdParam) {
-                setPlanillaSeleccionada(data[0].id);
+            // Solo autoseleccionamos si viene por ID desde la url explícitamente
+            if (viajeIdParam && data?.some(p => p.id === viajeIdParam)) {
+                setPlanillaSeleccionada(viajeIdParam);
+            } else {
+                setPlanillaSeleccionada('');
             }
         };
         fetchPlanillas();
@@ -57,7 +71,7 @@ export default function NuevoRemito() {
 
     useEffect(() => {
         // Auto-cálculo simple (Totales de Flete y Valor de todos los bultos)
-        const totalFleteItems = bultos.reduce((acc, b) => acc + (Number(b.flete) || 0), 0);
+        const totalFleteItems = bultos.reduce((acc, b) => acc + ((Number(b.bul) || 1) * (Number(b.flete) || 0)), 0);
         const totalValItems = bultos.reduce((acc, b) => acc + (Number(b.valor_declarado) || 0), 0);
 
         setRemito(prev => ({
@@ -118,6 +132,9 @@ export default function NuevoRemito() {
 
             if (planillaSeleccionada) {
                 insertPayload.viaje_id = planillaSeleccionada;
+                insertPayload.estado = 'en_transito';
+            } else {
+                insertPayload.estado = 'pendiente';
             }
 
             const { data: nuevoRemito, error: remitoError } = await supabase.from('remitos')
@@ -140,16 +157,17 @@ export default function NuevoRemito() {
 
             if (bultosError) throw bultosError;
 
-            alert(`Remito Nº ${nuevoRemito.numero_guia || ''} generado correctamente.`);
-            if (viajeIdParam) {
-                navigate('/viajes'); // Vuelve a la hoja de ruta del chofer
-            } else {
-                navigate('/dashboard'); // Volvemos al inicio para admin
-            }
+            showAlert('Remito Generado', `Remito Nº ${nuevoRemito.numero_guia || ''} generado y listo para enviar.`, false, () => {
+                if (viajeIdParam) {
+                    navigate('/viajes'); // Vuelve a la hoja de ruta del chofer
+                } else {
+                    navigate('/dashboard'); // Volvemos al inicio para admin
+                }
+            });
 
         } catch (error) {
             console.error('Error guardando remito:', error.message);
-            alert('Hubo un error al generar el remito: ' + error.message);
+            showAlert('Error', 'Hubo un error al generar el remito: ' + error.message, true);
         } finally {
             setIsSubmitting(false);
         }
@@ -313,6 +331,39 @@ export default function NuevoRemito() {
                 </button>
 
             </form>
+
+            {/* Custom Dialog / Modal */}
+            {dialog.isOpen && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                    <div style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '1rem', width: '100%', maxWidth: '400px', padding: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', position: 'relative' }}>
+                        <h3 className={`text-xl font-bold mb-3 flex items-center gap-2 ${dialog.isDestructive ? 'text-red-500' : 'text-[var(--primary)]'}`}>
+                            <AlertCircle />
+                            {dialog.title}
+                        </h3>
+                        <p className="text-muted mb-6 text-sm">{dialog.message}</p>
+
+                        <div className="flex gap-3 justify-end">
+                            {!dialog.isAlert && (
+                                <button
+                                    onClick={() => setDialog({ ...dialog, isOpen: false })}
+                                    className="px-4 py-2 rounded-md bg-[var(--surface-hover)] border border-[var(--border)] hover:bg-gray-700 text-white font-medium transition-colors text-sm"
+                                >
+                                    Cancelar
+                                </button>
+                            )}
+                            <button
+                                onClick={() => {
+                                    if (dialog.onConfirm) dialog.onConfirm();
+                                    setDialog({ ...dialog, isOpen: false });
+                                }}
+                                className={`px-4 py-2 rounded-md font-bold transition-colors text-sm shadow-md ${dialog.isDestructive ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black'}`}
+                            >
+                                {dialog.isAlert ? 'Aceptar' : (dialog.confirmText || 'Confirmar')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -12,6 +12,7 @@ import AsignarViaje from './pages/viajes/AsignarViaje';
 import MisViajes from './pages/viajes/MisViajes';
 import NuevoViaje from './pages/viajes/NuevoViaje';
 import PrintPlanilla from './pages/viajes/PrintPlanilla';
+import Seguimiento from './pages/public/Seguimiento';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -34,6 +35,10 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const location = useLocation();
+  const isPrintRoute = location.pathname.includes('/imprimir/');
+  const isPublicRoute = location.pathname.includes('/seguimiento/');
+
   if (loading) {
     return (
       <div className="app-container flex items-center justify-center">
@@ -42,10 +47,16 @@ function App() {
     );
   }
 
+  const layoutClass = isPrintRoute || isPublicRoute ? "" : "app-container";
+  const mainClass = isPrintRoute || isPublicRoute ? "w-full min-h-screen" : "main-content flex flex-col";
+
   return (
-    <div className="app-container">
-      <main className="main-content flex flex-col">
+    <div className={layoutClass}>
+      <main className={mainClass}>
         <Routes>
+          {/* Rutas Públicas (Sin login requerido) */}
+          <Route path="/seguimiento/:guia" element={<Seguimiento />} />
+
           {/* Si ya hay sesión, redirigimos al Dashboard */}
           <Route
             path="/"

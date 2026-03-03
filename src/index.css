@@ -289,3 +289,25 @@ h6 {
 .gap-4 {
   gap: 1rem;
 }
+
+@media print {
+
+  body,
+  html,
+  #root {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  .app-container {
+    max-width: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: white !important;
+  }
+
+  .main-content {
+    padding: 0 !important;
+  }
+}

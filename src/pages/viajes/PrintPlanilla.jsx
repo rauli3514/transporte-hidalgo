@@ -177,6 +177,10 @@ export default function PrintPlanilla() {
                     background-color: white !important;
                     box-shadow: 0 10px 25px rgba(0,0,0,0.5);
                 }
+                .a4-page, .a4-page * {
+                    color: black !important;
+                    border-color: black !important;
+                }
                 
                 @media print {
                     @page { size: A4 portrait; margin: 10mm; }
@@ -184,6 +188,10 @@ export default function PrintPlanilla() {
                     .no-print { display: none !important; }
                     .print-wrapper { padding: 0; background-color: white !important; }
                     .a4-page { width: 100%; box-shadow: none; margin: 0; padding: 0; }
+                    .a4-page, .a4-page * {
+                        color: black !important;
+                        border-color: black !important;
+                    }
                 }
             `}} />
         </div>

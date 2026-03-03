@@ -1,16 +1,60 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { ArrowLeft, FileText, Truck, Search, Printer, MapPin, CheckCircle, Clock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowLeft, FileText, Truck, Search, Printer, MapPin, CheckCircle, Clock, Trash2, AlertCircle, PackageCheck, PackagePlus } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
 
 export default function ListaRemitos() {
+    const [searchParams] = useSearchParams();
+    const filtroInicial = searchParams.get('filtro') || '';
+
     const [remitos, setRemitos] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filtro, setFiltro] = useState(''); // 'pendiente', 'en_transito', 'entregado'
+    const [filtro, setFiltro] = useState(filtroInicial); // 'pendiente', 'en_transito', 'entregado'
+    const [userProfile, setUserProfile] = useState(null);
+    const [dialog, setDialog] = useState({ isOpen: false, title: '', message: '', confirmText: '', onConfirm: null, isDestructive: false, isAlert: false });
 
     useEffect(() => {
+        const fetchProfile = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data } = await supabase.from('usuarios').select('*').eq('id', user.id).single();
+                setUserProfile(data);
+            }
+        };
+        fetchProfile();
         fetchRemitos();
     }, [filtro]);
+
+    const showAlert = (title, message, isDestructive = false) => {
+        setDialog({ isOpen: true, title, message, isAlert: true, isDestructive });
+    };
+
+    const showConfirm = (title, message, confirmText, isDestructive, onConfirm) => {
+        setDialog({ isOpen: true, title, message, confirmText, isDestructive, isAlert: false, onConfirm });
+    };
+
+    const eliminarRemito = (remitoId) => {
+        showConfirm(
+            '⚠️ Eliminar Remito',
+            '¿Estás seguro de eliminar este remito definitivamente del sistema?',
+            'Eliminar Definitivo',
+            true,
+            async () => {
+                try {
+                    // Eliminar remitos_items primero (por las dudas)
+                    await supabase.from('remitos_items').delete().eq('remito_id', remitoId);
+
+                    const { error } = await supabase.from('remitos').delete().eq('id', remitoId);
+                    if (error) throw error;
+
+                    fetchRemitos();
+                } catch (error) {
+                    console.error(error);
+                    showAlert('Error', 'Error al intentar eliminar remito: ' + (error.message || JSON.stringify(error)), true);
+                }
+            }
+        );
+    };
 
     const fetchRemitos = async () => {
         setLoading(true);
@@ -129,9 +173,20 @@ export default function ListaRemitos() {
                                 </div>
 
                                 <div className="flex gap-2">
-                                    <Link to={`/remitos/imprimir/${r.id}`} className="btn bg-dark text-white border border-[var(--border)] p-2 hover:bg-[var(--surface)] transition-colors">
+                                    <a href={`/seguimiento/${r.numero_guia}`} target="_blank" rel="noreferrer" className="btn bg-[var(--surface-hover)] text-[var(--primary)] border border-[var(--primary)]/20 p-2 hover:bg-[var(--primary)] hover:text-black transition-colors" title="Ver Seguimiento Digital">
+                                        <PackageCheck size={18} />
+                                    </a>
+
+                                    <Link to={`/remitos/imprimir/${r.id}`} className="btn bg-[var(--surface-hover)] text-[var(--text-main)] border border-[var(--border)] p-2 hover:bg-[var(--primary)] hover:text-black transition-colors" title="Imprimir Remito Formato A4">
                                         <Printer size={18} />
                                     </Link>
+
+                                    {userProfile?.rol !== 'transportista' && (
+                                        <button onClick={() => eliminarRemito(r.id)} className="btn bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-colors p-2" title="Eliminar Definitivamente">
+                                            <Trash2 size={18} />
+                                        </button>
+                                    )}
+
                                     {r.estado === 'pendiente' && (
                                         <Link to={`/viajes/asignar/${r.id}`} className="btn btn-primary px-3 py-2 text-sm" style={{ textDecoration: 'none' }}>
                                             Asignar Viaje
@@ -143,6 +198,41 @@ export default function ListaRemitos() {
                     ))
                 )}
             </div>
-        </div>
+
+            {/* Custom Dialog / Modal */}
+            {
+                dialog.isOpen && (
+                    <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                        <div style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '1rem', width: '100%', maxWidth: '400px', padding: '1.5rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', position: 'relative' }}>
+                            <h3 className={`text-xl font-bold mb-3 flex items-center gap-2 ${dialog.isDestructive ? 'text-red-500' : 'text-[var(--primary)]'}`}>
+                                <AlertCircle />
+                                {dialog.title}
+                            </h3>
+                            <p className="text-muted mb-6 text-sm">{dialog.message}</p>
+
+                            <div className="flex gap-3 justify-end">
+                                {!dialog.isAlert && (
+                                    <button
+                                        onClick={() => setDialog({ ...dialog, isOpen: false })}
+                                        className="px-4 py-2 rounded-md bg-[var(--surface-hover)] border border-[var(--border)] hover:bg-gray-700 text-white font-medium transition-colors text-sm"
+                                    >
+                                        Cancelar
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => {
+                                        if (dialog.onConfirm) dialog.onConfirm();
+                                        setDialog({ ...dialog, isOpen: false });
+                                    }}
+                                    className={`px-4 py-2 rounded-md font-bold transition-colors text-sm shadow-md ${dialog.isDestructive ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black'}`}
+                                >
+                                    {dialog.isAlert ? 'Aceptar' : (dialog.confirmText || 'Confirmar')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 }

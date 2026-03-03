@@ -7,6 +7,7 @@ import { Logo } from '../components/Logo';
 export default function Dashboard() {
     const navigate = useNavigate();
     const [userProfile, setUserProfile] = useState(null);
+    const [stats, setStats] = useState({ viajesEnCurso: 0, remitosHoy: 0 });
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -16,7 +17,34 @@ export default function Dashboard() {
                 setUserProfile(data);
             }
         };
+
+        const fetchStats = async () => {
+            try {
+                // Viajes en curso = estado != cerrado
+                const { count: countViajes } = await supabase
+                    .from('viajes')
+                    .select('*', { count: 'exact', head: true })
+                    .neq('estado', 'cerrado');
+
+                // Remitos hoy = creados hoy
+                const startOfDay = new Date();
+                startOfDay.setHours(0, 0, 0, 0);
+                const { count: countRemitos } = await supabase
+                    .from('remitos')
+                    .select('*', { count: 'exact', head: true })
+                    .gte('created_at', startOfDay.toISOString());
+
+                setStats({
+                    viajesEnCurso: countViajes || 0,
+                    remitosHoy: countRemitos || 0
+                });
+            } catch (error) {
+                console.error("Error cargando stats", error);
+            }
+        };
+
         fetchProfile();
+        fetchStats();
     }, []);
 
     const handleLogout = async () => {
@@ -43,22 +71,20 @@ export default function Dashboard() {
             <p className="text-muted text-sm mb-6">Métricas de hoy y accesos rápidos a la operativa de transporte.</p>
 
             {userProfile?.rol !== 'transportista' && (
-                <>
-                    <div className="grid gap-4 mb-6" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                        <div className="card text-center mb-0" style={{ padding: '1.5rem 1rem' }}>
-                            <h3 className="text-muted mb-2" style={{ fontSize: '0.8125rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Viajes Curso</h3>
-                            <p style={{ fontSize: '2.5rem', fontWeight: 700, margin: 0 }}>En <span style={{ color: 'var(--primary)' }}>3</span></p>
-                        </div>
-                        <div className="card text-center mb-0" style={{ padding: '1.5rem 1rem' }}>
-                            <h3 className="text-muted mb-2" style={{ fontSize: '0.8125rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Remitos Hoy</h3>
-                            <p style={{ fontSize: '2.5rem', fontWeight: 700, margin: 0 }}>45</p>
-                        </div>
+                <div className="grid gap-4 mb-6 grid-cols-2">
+                    <div className="card text-center mb-0" style={{ padding: '1.5rem 1rem' }}>
+                        <h3 className="text-muted mb-2" style={{ fontSize: '0.8125rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Planillas en Curso</h3>
+                        <p style={{ fontSize: '2.5rem', fontWeight: 700, margin: 0 }}>{stats.viajesEnCurso}</p>
                     </div>
-                </>
+                    <div className="card text-center mb-0" style={{ padding: '1.5rem 1rem' }}>
+                        <h3 className="text-muted mb-2" style={{ fontSize: '0.8125rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Remitos Hoy</h3>
+                        <p style={{ fontSize: '2.5rem', fontWeight: 700, margin: 0 }}>{stats.remitosHoy}</p>
+                    </div>
+                </div>
             )}
 
-            <div className="mb-8 grid gap-3 grid-cols-2">
-                <Link to="/remitos/nuevo" className="btn btn-primary w-full" style={{ padding: '1.25rem', justifyContent: 'center', textDecoration: 'none' }}>
+            <div className={`mb-8 grid gap-3 ${userProfile?.rol !== 'transportista' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                <Link to="/remitos/nuevo" className="btn btn-primary w-full" style={{ padding: '1.25rem', textDecoration: 'none' }}>
                     <PackagePlus size={20} style={{ marginRight: '0.75rem' }} />
                     Cargar Remito
                 </Link>
@@ -97,7 +123,7 @@ export default function Dashboard() {
                 )}
 
                 {userProfile?.rol !== 'transportista' && (
-                    <Link to="/seguimiento" className="card flex items-center justify-between mb-0" style={{ textDecoration: 'none', color: 'inherit', padding: '1rem' }}>
+                    <Link to="/remitos?filtro=entregado" className="card flex items-center justify-between mb-0" style={{ textDecoration: 'none', color: 'inherit', padding: '1rem' }}>
                         <div className="flex items-center gap-4">
                             <CheckCircle2 size={24} style={{ color: 'var(--status-delivered)' }} />
                             <div>
