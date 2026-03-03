@@ -7,6 +7,7 @@ import Vehiculos from './pages/Vehiculos';
 import Choferes from './pages/Choferes';
 import NuevoRemito from './pages/remitos/NuevoRemito';
 import ListaRemitos from './pages/remitos/ListaRemitos';
+import PrintRemito from './pages/remitos/PrintRemito';
 import AsignarViaje from './pages/viajes/AsignarViaje';
 import MisViajes from './pages/viajes/MisViajes';
 
@@ -69,6 +70,10 @@ function App() {
           <Route
             path="/remitos"
             element={session ? <ListaRemitos /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/remitos/imprimir/:id"
+            element={session ? <PrintRemito /> : <Navigate to="/" replace />}
           />
           <Route
             path="/viajes/asignar/:id"

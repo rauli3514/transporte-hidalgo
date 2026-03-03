@@ -129,9 +129,9 @@ export default function ListaRemitos() {
                                 </div>
 
                                 <div className="flex gap-2">
-                                    <button className="btn bg-dark text-white border border-[var(--border)] p-2 hover:bg-[var(--surface)]">
+                                    <Link to={`/remitos/imprimir/${r.id}`} className="btn bg-dark text-white border border-[var(--border)] p-2 hover:bg-[var(--surface)] transition-colors">
                                         <Printer size={18} />
-                                    </button>
+                                    </Link>
                                     {r.estado === 'pendiente' && (
                                         <Link to={`/viajes/asignar/${r.id}`} className="btn btn-primary px-3 py-2 text-sm" style={{ textDecoration: 'none' }}>
                                             Asignar Viaje
